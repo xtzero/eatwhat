@@ -1,0 +1,272 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>今天尺肾么</title>
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<link href="css/mui.min.css" rel="stylesheet" />
+		<link href="css/ani.css" />
+		<!-- <script src="js/mui.min.js"></script> -->
+		<script type="text/javascript" src="js/vue.js" ></script>
+		<script type="text/javascript" src="js/util.js"></script>
+		<script type="text/javascript" src="js/ani.js"></script>
+	</head>
+	<style type="text/css">
+		*{
+			margin: 0;
+			font-family: "microsoft yahei"
+		}
+		
+		input{
+			background-color: white;
+			border: none !important;
+		}
+		
+		#vbody{
+			display: flex;
+			flex-direction: column;
+			padding-top: 44px;
+		}
+		
+		.okbtn,.adding{
+			width: 100%;
+			height: 40%;
+			left: 0;
+			top: 0;
+			display: flex;
+			flex-direction: column;
+			justify-content: center;
+			align-items: center;
+		}
+		
+		.okbtn-in{
+			width: 60vw;
+			height: 60vw;
+			border-radius: 50%;
+			background-color: #34537C;
+			color: white;
+			display: flex;
+			flex-direction: row;
+			justify-content: center;
+			align-items: center;
+			flex-wrap: wrap;
+			text-align: center;
+			font-size: 3em;
+		}
+		
+		.okbtn-in:active{
+			background-color: darkblue;
+		}
+		
+		.adding-in{
+			width: 60vw;
+			height: 60vw;
+			border-radius: 50%;
+			background-color: #34537C;
+			color: white;
+			display: flex;
+			flex-direction: column;
+			justify-content: center;
+			align-items: center;
+			text-align: center;
+			font-size: 3em;
+		}
+		
+		.ok-tip{
+			margin: 20px 0;
+			text-align: center;
+		}
+		
+		.setting-tip{
+			border-left: solid #34537C 7px;
+			margin-top: 20px;
+			margin-left: 10px;
+			padding-left: 10px;
+			color: #34537C;
+			font-size: 1em;
+		}
+		
+		.setting-tip2{
+			margin-left: 10px;
+		}
+		
+		.addnew{
+			width: 100%;
+			height: 66px;
+			background-color: #34537C;
+			color: white;
+			line-height: 66px;
+			text-align: center;
+		}
+		
+		.addnew:active{
+			background-color: darkblue;
+		}
+		
+		.ateList{
+			display: flex;
+			flex-direction: column;
+			padding: 10px 0;
+		}
+		
+		.atelist-row{
+			display: flex;
+			flex-direction: row;
+			justify-content: space-between;
+			align-items: center;
+			height: 44px;
+			background-color: white;
+			padding: 0 20px;
+			margin: 2px 0;
+		}
+		
+		.atelist-row-del{
+			font-size: 0.7em;
+			color: blue;
+		}
+	</style>
+	<body>
+		<div class="mui-content" id="vbody">
+			<div class="okbtn">
+				<div class="okbtn-in" @click="getRandomOne">{{getRandomOneBtn}}</div>
+				<p class="ok-tip">
+					从 [{{totalCount}}] 个里抽取今天吃什么
+				</p>
+			</div>
+			<div class="setting">
+				<p class="setting-tip">登记新的</p>
+				<p class="setting-tip2">如果吃了新的东西，在这里登记。</p>
+				<input type="text" v-model="neweat"/>
+				<div class="addnew" @click="addNewEat">{{addNewBtn}}</div>
+				<p class="setting-tip" v-if="ateList.length>0">历史类似吃过</p>
+				<p class="setting-tip2" v-if="ateList.length>0">点击之前吃过的可以直接选择，点击删除则可以让这个吃过的东西不再被抽到。</p>
+				<div class="ateList">
+					<div class="atelist-row" v-for="v in ateList">
+						<div class="atelist-foodname" @click="eatTmd(v)">{{v.food}} | 被吃了{{v.eatcount}}次</div>
+						<div class="atelist-row-del" @click="rubbishFood(v)">删除</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<script type="text/javascript">
+			// mui.init();
+			var v = new Vue({
+				el: '#vbody',
+				data: {
+					ateList: [],
+					totalCount: 0,
+					neweat: '',
+					getRandomOneBtn: '搞',
+					addNewBtn: '登记'
+				},
+				methods: {
+					getTotalCount(){
+						var _this = this;
+						get('all',{},function(res){
+							_this.totalCount = res.data;
+						});
+					},
+					
+					getRandomOne(){
+						var _this = this;
+						if(_this.getRandomOneBtn != '搞ing'){
+							_this.getRandomOneBtn = '搞ing';
+							get('randomGetOne',{},function(res){
+								if(res.code == 0){
+									console.log(res);
+									if(confirm("命运决定今天你要吃【"+res.data.food+"】，于"+res.data.create_at+"发送,\n\n确定要吃吗？")){
+										_this.eatTmd(res.data);
+									}
+								}else{
+									alert("貌似出现了一些错误？服务器说："+res.msg);
+								}
+								_this.getRandomOneBtn = '搞';
+							});
+						}
+					},
+					
+					addNewEat(){
+						var _this = this;
+						if(_this.neweat != ''){
+							if(confirm('确定要吃'+_this.neweat+'吗？')){
+								if(_this.addNewBtn != '登记ing'){
+									_this.addNewBtn == '登记ing';
+									get('addLog',{
+										phone: 'phone',
+										food: _this.neweat
+									},function(res){
+										if(res.code == 0){
+											alert('今天居然吃了这么nb的东西，我记下了。下次再不知道吃什么的时候就可能再吃一边今天这个牛逼的东西。');
+										}else{
+											alert('没记录成功，可能是除了问题？');
+										}
+									})
+								}
+							}
+						}else{
+							alert('你到底吃啥！');
+						}
+					},
+					
+					findAteFood(){
+						var _this = this;
+						get('findAteFood',{
+							name: _this.neweat
+						},function(res){
+							console.log(res);
+							if(res.code == 0){
+								_this.ateList = res.data;
+							}else{
+								_this.ateList = [];
+							}
+						})
+					},
+					
+					rubbishFood(v){
+						var _this = this;
+						if(confirm('真的要让「'+v.food+'」再也不出现吗？')){
+								get('rubbishFood',{
+									id: v.id
+								},function(res){
+										if(res.code == 0){
+											alert(v.food+"再也不会出现在这里了，如果返回了，重新将他登记在新的吃的里就好了。真香。");
+										}else{
+											alert("貌似出现了一些错误？服务器说："+res.msg);
+										}
+										
+										_this.findAteFood();
+								})
+						}
+					},
+					
+					eatTmd(v){
+						if(confirm('今天就吃「'+v.food+'」了吗？？')){
+								get('eatTmd',{
+									id: v.id
+								},function(res){
+										if(res.code == 0){
+											alert("你今天吃了"+v.food+"。真香。");
+										}else{
+											alert("貌似出现了一些错误？服务器说："+res.msg);
+										}
+								})
+						}
+					}
+				},
+				watch:{
+					neweat(){
+						if(this.neweat){
+							this.findAteFood();
+						}else{
+							this.ateList = [];
+						}
+					}
+				},
+				mounted(){
+					this.getTotalCount();
+				}
+			});
+		</script>
+	</body>
+
+</html>
