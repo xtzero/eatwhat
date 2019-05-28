@@ -1,5 +1,5 @@
 function get(apiFileName,param,cb){
-	var url = 'http://www.xtzero.me/eatwhat/api/'+apiFileName+'.php?uselessparam=useless';
+	var url = 'http://eatapi.xtzero.me/'+apiFileName+'.php?uselessparam=useless';
 	for(var i in param){
 		url += '&'+i+'='+param[i];
 	}
